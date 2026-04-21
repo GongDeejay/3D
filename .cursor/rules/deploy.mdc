@@ -1,0 +1,42 @@
+---
+description: 3d.mplusm.site 全链路部署与发版（DNS + 腾讯云主机 + PM2 + Nginx）
+globs: deploy/**/*,scripts/**/*,ecosystem.config.cjs
+alwaysApply: false
+---
+
+# 部署 Skill（固定：3d.mplusm.site）
+
+用户要求「部署 / 上线 / 发版」时，按以下顺序执行或指导；**单一事实来源**以 Markdown 文件为准。
+
+## 1. DNS（自动化）
+
+- 文档：`deploy/DNS-AUTOMATION.md`
+- 本机命令（需已 `export TENCENTCLOUD_SECRET_ID` / `TENCENTCLOUD_SECRET_KEY`，勿写入 Git）：
+
+```bash
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+npm run dns:3d
+```
+
+- 默认：`3d` / `mplusm.site` → A → `43.133.145.77`，线路 `默认`。
+
+## 2. 云主机（首次与日常）
+
+- 文档：`deploy/MPLUSM.md`
+- 约定：应用目录 **`/var/www/3d-mplusm`**，PM2 进程名 **`3d-mplusm`**，`ecosystem.config.cjs`，Nginx 配置 `deploy/nginx-3d.mplusm.site.conf`，HTTPS 用 certbot。
+- 发版（在服务器上）：
+
+```bash
+APP_ROOT=/var/www/3d-mplusm /var/www/3d-mplusm/deploy/release.sh
+```
+
+## 3. 环境与对外说明
+
+- 生产 `.env`：`NEXT_PUBLIC_BASE_URL=https://3d.mplusm.site`，`DATABASE_URL`、`ADMIN_PASSWORD`、`SESSION_SECRET` 等见 `deploy/MPLUSM.md`。
+- 上线后地址与用法：`deploy/SITE-USAGE.md`。
+
+## 约束（Agent）
+
+- **不得**在仓库或对话中写入 root 密码、腾讯云 SecretKey。
+- **不得**声称已 SSH 到用户服务器；远程命令由用户在主机上执行，或通过其 CI/CD。
+- 修改部署相关文件后：本地可运行 `npm run build` 验证；合并后提醒用户在服务器执行 `deploy/release.sh`。
