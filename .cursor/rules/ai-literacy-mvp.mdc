@@ -1,0 +1,9 @@
+---
+description: MVP 问卷域、发放批次与题库版本约定
+globs: src/app/admin/**/*,src/app/s/**/*,src/lib/question-bank/**/*,src/lib/analysis.ts
+alwaysApply: false
+---
+
+- 每次发放对应 `SurveyDistribution`：含 `scenarioSummary` / `scenarioDetail`，与题库 `templateKey` 解耦。
+- 交互素养题库常量：`src/lib/question-bank/interaction-literacy-v1.ts`；解读逻辑：`src/lib/analysis.ts`。
+- 新增题型须同步 Zod：`src/lib/answers-schema.ts` 与提交 action 中的解析。

@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 超级个体能力 · AI 交互素养 MVP
 
-## Getting Started
+大众化入门向的 **短问卷** + **按场景发放的管理后台**：每次发放自带当时场景说明，回收后按批次查看分布与规则化「下一步建议」。未来可接入既有对话式 AI（见 `src/lib/integrations/conversation-adapter.ts`）。
 
-First, run the development server:
+## 技术栈（已定）
+
+- **Next.js 16**（App Router）+ **TypeScript** + **Tailwind CSS 4**
+- **Prisma 6** + **SQLite**（`DATABASE_URL="file:./dev.db"`，上线可换 PostgreSQL）
+- **Zod** 校验作答；**jose** 签发管理端会话（Edge middleware 可用）
+
+## 本地运行
 
 ```bash
+cp .env.example .env
+# 编辑 ADMIN_PASSWORD 与 SESSION_SECRET
+npm install
+npm run db:push
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- 首页：<http://localhost:3000>
+- 管理后台：<http://localhost:3000/admin/login>（使用 `ADMIN_PASSWORD`）
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 生产环境
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 设置 `NEXT_PUBLIC_BASE_URL` 为站点根 URL，便于后台生成正确的填写链接与二维码。
+- 将 `DATABASE_URL` 指向 PostgreSQL 等生产库并执行 `prisma migrate`（由 `db push` 演进而来）。
 
-## Learn More
+## Git 与多设备开发
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# 在平台目录初始化并推到你自己的远程（GitHub / Gitee / 腾讯工蜂等）
+git init
+git add .
+git commit -m "chore: initial MVP"
+git branch -M main
+git remote add origin <你的仓库 HTTPS 或 SSH 地址>
+git push -u origin main
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+在其它设备：`git clone` 后复制 `.env`，执行 `npm ci && npx prisma db push && npm run dev`。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 腾讯云部署
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+见仓库内 [DEPLOY.md](./DEPLOY.md)（Nginx + PM2 示例）。

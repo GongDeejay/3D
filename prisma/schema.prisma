@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// 一次问卷发放（含当时场景说明），对应一个可分享的填写链接
+model SurveyDistribution {
+  id              String   @id @default(cuid())
+  title           String
+  /// 短摘要：列表与链接页标题旁展示
+  scenarioSummary String
+  /// 本次发放的场景说明（可较长，填写页顶部展示）
+  scenarioDetail  String   @default("")
+  /// URL 路径片段，唯一，如 /s/abc123
+  slug            String   @unique
+  /// 题库版本键，便于日后换题仍兼容分析
+  templateKey     String   @default("interaction-literacy-v1")
+  createdAt       DateTime @default(now())
+
+  responses SurveyResponse[]
+}
+
+model SurveyResponse {
+  id               String   @id @default(cuid())
+  distributionId   String
+  distribution     SurveyDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  /// { [questionId]: number | string } — 与题库 question id 对齐
+  answers          Json
+  createdAt        DateTime @default(now())
+
+  @@index([distributionId])
+}
