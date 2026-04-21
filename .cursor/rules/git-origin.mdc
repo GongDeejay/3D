@@ -1,0 +1,11 @@
+---
+description: 默认 Git 远程仓库；用户要求推送、同步或拉取时使用
+alwaysApply: false
+---
+
+# Git 约定
+
+- **远程 `origin`**：`https://github.com/GongDeejay/3D.git`
+- **默认分支**：`main`
+- **仓库内容**：本仓库根目录即 Next 应用（含 `package.json`、`src/`），在包含 `package.json` 的目录下执行 `git` / `npm` 命令。
+- 用户说「推到 GitHub / 同步仓库」时：在应用根目录执行 `git status`，再 `git push origin main`（需已配置凭据）。

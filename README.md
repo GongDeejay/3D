@@ -2,6 +2,8 @@
 
 大众化入门向的 **短问卷** + **按场景发放的管理后台**：每次发放自带当时场景说明，回收后按批次查看分布与规则化「下一步建议」。未来可接入既有对话式 AI（见 `src/lib/integrations/conversation-adapter.ts`）。
 
+**GitHub 仓库**：https://github.com/GongDeejay/3D（`main` 分支）。若你本地路径仍是 `.../3D/platform`，该目录与 GitHub 仓库根目录内容一致，在 `platform` 里执行 `git pull` / `git push` 即可。
+
 ## 技术栈（已定）
 
 - **Next.js 16**（App Router）+ **TypeScript** + **Tailwind CSS 4**
@@ -28,17 +30,28 @@ npm run dev
 
 ## Git 与多设备开发
 
+**在另一台电脑继续开发**（克隆后根目录即为本项目，内含 `package.json`）：
+
 ```bash
-# 在平台目录初始化并推到你自己的远程（GitHub / Gitee / 腾讯工蜂等）
-git init
-git add .
-git commit -m "chore: initial MVP"
-git branch -M main
-git remote add origin <你的仓库 HTTPS 或 SSH 地址>
-git push -u origin main
+git clone https://github.com/GongDeejay/3D.git
+cd 3D
+cp .env.example .env
+# 编辑 .env（ADMIN_PASSWORD、SESSION_SECRET 等；勿提交）
+npm install
+npx prisma db push
+npm run dev
 ```
 
-在其它设备：`git clone` 后复制 `.env`，执行 `npm ci && npx prisma db push && npm run dev`。
+日常同步：
+
+```bash
+git pull origin main
+# 改代码后
+git add -A && git commit -m "描述你的修改"
+git push origin main
+```
+
+使用 **SSH** 时，将远程改为 `git@github.com:GongDeejay/3D.git`：`git remote set-url origin git@github.com:GongDeejay/3D.git`。
 
 ## 腾讯云部署
 
