@@ -12,6 +12,11 @@
 - 数据库：`npm run db:push`（SQLite 文件 `prisma/dev.db`）
 - 构建：`npm run build`
 
+## 生产部署（腾讯云）
+
+- 固定流程与域名见 **`deploy/MPLUSM.md`**（`3d.mplusm.site`）；发版脚本 **`deploy/release.sh`**；PM2 配置 **`ecosystem.config.cjs`**。
+- 勿在仓库或对话中保存服务器密码、腾讯云 SecretKey。
+
 ## 约束
 
 - 管理后台依赖 `ADMIN_PASSWORD` / `SESSION_SECRET`；勿将 `.env` 提交入库。

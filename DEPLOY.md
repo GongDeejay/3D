@@ -1,5 +1,13 @@
 # 部署到腾讯云（或其它 Linux 云主机）
 
+## 标准化：3d.mplusm.site（当前项目）
+
+**主文档**：[`deploy/MPLUSM.md`](./deploy/MPLUSM.md)（DNS、Nginx、PM2、HTTPS、发布脚本、目录约定）。
+
+以下为通用说明；与 `deploy/MPLUSM.md` 冲突时，以 **`deploy/MPLUSM.md`** 为准。
+
+---
+
 以下假设：**Ubuntu 22.04+**、已有域名解析到服务器公网 IP，使用 **Nginx** 反向代理 + **PM2** 守护 Node 进程。
 
 ## 1. 服务器准备

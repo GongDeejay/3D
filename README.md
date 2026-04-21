@@ -53,6 +53,7 @@ git push origin main
 
 使用 **SSH** 时，将远程改为 `git@github.com:GongDeejay/3D.git`：`git remote set-url origin git@github.com:GongDeejay/3D.git`。
 
-## 腾讯云部署
+## 腾讯云部署（固定域名）
 
-见仓库内 [DEPLOY.md](./DEPLOY.md)（Nginx + PM2 示例）。
+- **主流程**：[deploy/MPLUSM.md](./deploy/MPLUSM.md)（`3d.mplusm.site`、目录 `/var/www/3d-mplusm`、PM2 名 `3d-mplusm`、`deploy/release.sh` 发版）
+- 通用补充：[DEPLOY.md](./DEPLOY.md)
