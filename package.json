@@ -9,27 +9,29 @@
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "dns:3d": "node scripts/dns-upsert-3d.cjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
+    "jose": "^6.0.0",
     "next": "16.2.4",
+    "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zod": "^4.3.6",
-    "jose": "^6.0.0",
-    "qrcode": "^1.5.4"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/qrcode": "^1.5.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "prisma": "^6.19.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "prisma": "^6.19.0"
+    "tencentcloud-sdk-nodejs": "^4.1.218",
+    "typescript": "^5"
   }
 }

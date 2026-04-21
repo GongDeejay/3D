@@ -23,13 +23,15 @@
 
 ## 1. 域名解析（二级域名）
 
-在 **腾讯云 DNS 解析 / DNSPod** 中，域名 **`mplusm.site`** 下新增一条记录：
+**方式 A（推荐，自动化）**：在本机配置 `TENCENTCLOUD_SECRET_ID` / `TENCENTCLOUD_SECRET_KEY` 后执行 `npm run dns:3d`，详见 [`deploy/DNS-AUTOMATION.md`](./DNS-AUTOMATION.md)。
+
+**方式 B（控制台手工）**：在 **腾讯云 DNS 解析 / DNSPod** 中，域名 **`mplusm.site`** 下新增：
 
 | 主机记录 | 记录类型 | 记录值     | TTL  |
 |----------|----------|------------|------|
 | `3d`     | **A**    | `43.133.145.77` | 默认 |
 
-保存后等待解析生效（通常数分钟，最长可到 24h）。可用 `ping 3d.mplusm.site` 或 `dig 3d.mplusm.site +short` 检查是否指向该 IP。
+保存后等待解析生效（通常数分钟，最长可到 24h）。可用 `dig 3d.mplusm.site +short` 检查是否指向该 IP。
 
 ---
 

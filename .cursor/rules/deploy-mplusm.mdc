@@ -11,4 +11,6 @@ alwaysApply: false
 - **发布脚本**：仓库内 `deploy/release.sh`；完整步骤见 **`deploy/MPLUSM.md`**
 - **环境变量**：`NEXT_PUBLIC_BASE_URL=https://3d.mplusm.site`；密钥仅在服务器 `.env`，永不写入 Git
 
+DNS 解析可用仓库脚本：`npm run dns:3d`（需本机环境变量 `TENCENTCLOUD_SECRET_*`，见 `deploy/DNS-AUTOMATION.md`）。
+
 协助部署时：优先让用户按 `deploy/MPLUSM.md` 操作；不要建议在仓库或聊天中保存 root 密码、SecretKey。

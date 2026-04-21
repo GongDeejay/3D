@@ -56,4 +56,6 @@ git push origin main
 ## 腾讯云部署（固定域名）
 
 - **主流程**：[deploy/MPLUSM.md](./deploy/MPLUSM.md)（`3d.mplusm.site`、目录 `/var/www/3d-mplusm`、PM2 名 `3d-mplusm`、`deploy/release.sh` 发版）
+- **解析自动化**：配置 `TENCENTCLOUD_SECRET_ID` / `TENCENTCLOUD_SECRET_KEY` 后执行 `npm run dns:3d`，见 [deploy/DNS-AUTOMATION.md](./deploy/DNS-AUTOMATION.md)
+- **上线后访问与用法**：[deploy/SITE-USAGE.md](./deploy/SITE-USAGE.md)
 - 通用补充：[DEPLOY.md](./DEPLOY.md)
