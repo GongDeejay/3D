@@ -15,4 +15,6 @@
 ## 约束
 
 - 管理后台依赖 `ADMIN_PASSWORD` / `SESSION_SECRET`；勿将 `.env` 提交入库。
+- 本地 SQLite（`prisma/*.db`）不提交；多设备克隆后执行 `npx prisma db push`。
 - 题库版本由 `templateKey` 标识；改题时保持旧 key 或做迁移，以免历史批次解读失真。
+- 填写完成后跳转 `/s/[slug]/done?rid=`，用于展示个人评级；`redirect()` 不可包在会误吞的 `try/catch` 中。
