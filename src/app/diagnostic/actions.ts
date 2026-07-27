@@ -105,8 +105,9 @@ export async function saveDiagnosticAnswerAction(input: unknown) {
 
   const question = findDiagnosticQuestion(parsed.data.questionId);
   if (!question) return { ok: false as const, error: "unknown_question" };
+  const hasUsableFirstAnswer = parsed.data.firstAnswer.trim().length > 0;
   if (
-    !validateDiagnosticAnswer(question, parsed.data.firstAnswer) ||
+    !hasUsableFirstAnswer ||
     !validateDiagnosticAnswer(question, parsed.data.finalAnswer)
   ) {
     return { ok: false as const, error: "invalid_answer" };

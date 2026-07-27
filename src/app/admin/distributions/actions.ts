@@ -60,3 +60,15 @@ export async function createDistributionAction(formData: FormData) {
   revalidatePath("/admin");
   redirect(`/admin/${created.id}`);
 }
+
+export async function deleteDistributionAction(id: string) {
+  if (typeof id !== "string" || !id.trim()) {
+    return { ok: false as const };
+  }
+
+  await prisma.surveyDistribution.deleteMany({
+    where: { id },
+  });
+  revalidatePath("/admin");
+  return { ok: true as const };
+}

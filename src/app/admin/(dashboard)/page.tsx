@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { DeleteDistributionButton } from "@/components/delete-distribution-button";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminHomePage() {
@@ -30,10 +31,10 @@ export default async function AdminHomePage() {
           <li className="px-5 py-10 text-center text-sm text-zinc-500">暂无批次，点击「新建发放」开始。</li>
         ) : (
           rows.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className="flex items-center gap-3 px-3">
               <Link
                 href={`/admin/${r.id}`}
-                className="flex flex-col gap-1 px-5 py-4 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between"
+                className="flex min-w-0 flex-1 flex-col gap-1 rounded-lg px-2 py-4 hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="font-medium text-zinc-900">{r.title}</p>
@@ -53,6 +54,7 @@ export default async function AdminHomePage() {
                   </span>
                 </div>
               </Link>
+              <DeleteDistributionButton id={r.id} title={r.title} />
             </li>
           ))
         )}

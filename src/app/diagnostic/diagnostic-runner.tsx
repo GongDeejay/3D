@@ -116,6 +116,11 @@ export function DiagnosticRunner({
     setError("");
   }
 
+  function updateTextAnswer(value: string) {
+    setAnswer(value);
+    setError("");
+  }
+
   function requestHint() {
     if (!answer.trim()) {
       setError("请先留下你的首次判断，再申请提示。");
@@ -289,7 +294,7 @@ export function DiagnosticRunner({
                 value={answer}
                 maxLength={500}
                 placeholder="输入你的结论，并尽量带上一条文本证据……"
-                onChange={(event) => selectAnswer(event.target.value, event.timeStamp)}
+                onChange={(event) => updateTextAnswer(event.target.value)}
               />
               <span>{answer.length} / 500</span>
             </div>
