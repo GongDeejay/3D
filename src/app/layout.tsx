@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "超级个体 · AI 交互素养问卷",
-  description: "大众化 AI 入门自评与按场景发放的管理后台。",
+  title: "DSE中文 · 情报侦察站",
+  description: "追踪中文信息从接收到书面输出的每一个环节，定位真正的能力卡点。",
 };
 
 export default function RootLayout({
