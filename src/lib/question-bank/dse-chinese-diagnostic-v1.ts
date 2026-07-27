@@ -364,6 +364,11 @@ export type PublicDiagnosticQuestion = Omit<DiagnosticQuestion, "scoring" | "evi
 export function getPublicDiagnosticBank() {
   return {
     ...DSE_DIAGNOSTIC_V1,
-    questions: DSE_DIAGNOSTIC_QUESTIONS.map(({ scoring: _scoring, evidenceNote: _evidenceNote, ...question }) => question),
+    questions: DSE_DIAGNOSTIC_QUESTIONS.map((question) => {
+      const publicQuestion: Partial<DiagnosticQuestion> = { ...question };
+      delete publicQuestion.scoring;
+      delete publicQuestion.evidenceNote;
+      return publicQuestion as PublicDiagnosticQuestion;
+    }),
   };
 }

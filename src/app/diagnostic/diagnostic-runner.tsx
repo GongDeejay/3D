@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 
 import {
   completeDiagnosticAttemptAction,
@@ -34,10 +35,10 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const startedRef = useRef(false);
-  const questionStartedAt = useRef(Date.now());
+  const questionStartedAt = useRef(0);
 
   const question = bank.questions[questionIndex];
-  const module = bank.modules.find((item) => item.id === question?.moduleId);
+  const currentModule = bank.modules.find((item) => item.id === question?.moduleId);
   const progress = Math.round((answeredIds.length / bank.questions.length) * 100);
 
   const moduleQuestionCounts = useMemo(
@@ -64,7 +65,7 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
       setAnsweredIds(result.answeredQuestionIds);
       const firstUnanswered = bank.questions.findIndex((item) => !result.answeredQuestionIds.includes(item.id));
       setQuestionIndex(firstUnanswered >= 0 ? firstUnanswered : bank.questions.length - 1);
-      questionStartedAt.current = Date.now();
+      questionStartedAt.current = window.performance.now();
     });
   }, [bank.questions]);
 
@@ -76,14 +77,14 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
     setHintLevel(0);
     setRevisionCount(0);
     setError("");
-    questionStartedAt.current = Date.now();
+    questionStartedAt.current = window.performance.now();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function selectAnswer(value: string) {
+  function selectAnswer(value: string, eventTime: number) {
     if (!firstAnswer) {
       setFirstAnswer(value);
-      setFirstResponseMs(Date.now() - questionStartedAt.current);
+      setFirstResponseMs(Math.max(0, Math.round(eventTime - questionStartedAt.current)));
     } else if (value !== answer) {
       setRevisionCount((count) => count + 1);
     }
@@ -98,7 +99,7 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
     }
     if (!firstAnswer) {
       setFirstAnswer(answer);
-      setFirstResponseMs(Date.now() - questionStartedAt.current);
+      setFirstResponseMs(Math.max(0, Math.round(window.performance.now() - questionStartedAt.current)));
     }
     setHintLevel((level) => Math.min(2, level + 1));
     setError("");
@@ -119,8 +120,8 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
       return;
     }
     const initialAnswer = firstAnswer || answer;
-    const initialMs = firstResponseMs || Date.now() - questionStartedAt.current;
-    const totalResponseMs = Date.now() - questionStartedAt.current;
+    const initialMs = firstResponseMs || Math.max(0, Math.round(window.performance.now() - questionStartedAt.current));
+    const totalResponseMs = Math.max(0, Math.round(window.performance.now() - questionStartedAt.current));
 
     startTransition(async () => {
       const result = await saveDiagnosticAnswerAction({
@@ -155,15 +156,15 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
     });
   }
 
-  if (!question || !module) return null;
+  if (!question || !currentModule) return null;
 
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
-        <a href="/" className={styles.brand}>
+        <Link href="/" className={styles.brand}>
           <span className={styles.reticle}>⌖</span>
           <span><strong>DSE中文</strong><small>情报侦察站</small></span>
-        </a>
+        </Link>
         <div className={styles.progressWrap}>
           <span>任务进度</span>
           <i><b style={{ width: `${progress}%` }} /></i>
@@ -205,7 +206,7 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
         <section className={styles.questionArea}>
           <div className={styles.questionHeader}>
             <div>
-              <span className={styles.kicker}>{module.number} / {module.title}</span>
+              <span className={styles.kicker}>{currentModule.number} / {currentModule.title}</span>
               <h2>{question.title}</h2>
             </div>
             <span className={styles.scriptBadge}>
@@ -239,7 +240,7 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
                   type="button"
                   key={option.id}
                   className={answer === option.id ? styles.selectedOption : ""}
-                  onClick={() => selectAnswer(option.id)}
+                  onClick={(event) => selectAnswer(option.id, event.timeStamp)}
                 >
                   <span>{String.fromCharCode(65 + index)}</span>
                   <strong>{option.label}</strong>
@@ -253,7 +254,7 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
                 value={answer}
                 maxLength={500}
                 placeholder="输入你的结论，并尽量带上一条文本证据……"
-                onChange={(event) => selectAnswer(event.target.value)}
+                onChange={(event) => selectAnswer(event.target.value, event.timeStamp)}
               />
               <span>{answer.length} / 500</span>
             </div>
