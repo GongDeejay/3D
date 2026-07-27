@@ -97,14 +97,14 @@ export default function HomePage() {
           </p>
 
           <div className={styles.heroActions}>
-            <button
+            <Link
               className={styles.primaryCta}
-              onClick={() => document.getElementById("mission-map")?.scrollIntoView({ behavior: "smooth" })}
+              href="/diagnostic"
             >
               <span className={styles.crosshair}>⌖</span>
               接收首项任务
               <span className={styles.arrow}>→</span>
-            </button>
+            </Link>
             <button className={styles.secondaryCta} onClick={() => setBriefingOpen(true)}>
               查看任务简报
             </button>
@@ -189,7 +189,9 @@ export default function HomePage() {
               <div className={styles.cardLine}><span /></div>
               <button
                 disabled={mission.status !== "ready"}
-                onClick={() => setBriefingOpen(true)}
+                onClick={() => {
+                  if (mission.status === "ready") window.location.href = "/diagnostic";
+                }}
               >
                 {mission.status === "ready" ? "开始解码" : "完成前序任务"}
                 <span>{mission.status === "ready" ? "→" : "⌕"}</span>
