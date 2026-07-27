@@ -28,6 +28,14 @@ type DistributionContext = {
   scenarioDetail: string;
 };
 
+const saveErrorMessages: Record<string, string> = {
+  invalid_payload: "作答过程数据格式异常，请重新点击保存；你的当前答案仍保留在页面上。",
+  attempt_unavailable: "本次任务已结束或续做凭证失效，请重新打开发放链接。",
+  unknown_question: "题库版本不一致，请刷新页面后重试。",
+  invalid_answer: "答案格式未通过校验，请重新选择或补充答案。",
+  storage_error: "存储服务暂时繁忙，答案仍保留在页面上，请再次点击保存。",
+};
+
 export function DiagnosticRunner({
   bank,
   distribution,
@@ -140,35 +148,39 @@ export function DiagnosticRunner({
     const totalResponseMs = Math.max(0, Math.round(window.performance.now() - questionStartedAt.current));
 
     startTransition(async () => {
-      const result = await saveDiagnosticAnswerAction({
-        accessToken,
-        questionId: question.id,
-        firstAnswer: initialAnswer,
-        finalAnswer: answer,
-        firstResponseMs: initialMs,
-        totalResponseMs,
-        hintLevel,
-        revisionCount,
-      });
-      if (!result.ok) {
-        setError("保存失败，请检查网络后重试。");
-        return;
-      }
+      try {
+        const result = await saveDiagnosticAnswerAction({
+          accessToken,
+          questionId: question.id,
+          firstAnswer: initialAnswer,
+          finalAnswer: answer,
+          firstResponseMs: initialMs,
+          totalResponseMs,
+          hintLevel,
+          revisionCount,
+        });
+        if (!result.ok) {
+          setError(saveErrorMessages[result.error] ?? "保存未完成，请重试；你的当前答案仍保留在页面上。");
+          return;
+        }
 
-      const nextAnswered = Array.from(new Set([...answeredIds, question.id]));
-      setAnsweredIds(nextAnswered);
-      const nextIndex = bank.questions.findIndex((item, index) => index > questionIndex && !nextAnswered.includes(item.id));
-      if (nextIndex >= 0) {
-        resetQuestionState(nextIndex);
-        return;
-      }
+        const nextAnswered = Array.from(new Set([...answeredIds, question.id]));
+        setAnsweredIds(nextAnswered);
+        const nextIndex = bank.questions.findIndex((item, index) => index > questionIndex && !nextAnswered.includes(item.id));
+        if (nextIndex >= 0) {
+          resetQuestionState(nextIndex);
+          return;
+        }
 
-      const completed = await completeDiagnosticAttemptAction(accessToken);
-      if (!completed.ok) {
-        setError("任务记录尚未完整，请稍后重试。");
-        return;
+        const completed = await completeDiagnosticAttemptAction(accessToken);
+        if (!completed.ok) {
+          setError("任务记录尚未完整，请稍后重试。");
+          return;
+        }
+        window.location.href = `/diagnostic/result?id=${encodeURIComponent(completed.attemptId)}&token=${encodeURIComponent(completed.accessToken)}`;
+      } catch {
+        setError("无法连接保存服务，请检查网络后重试；你的当前答案仍保留在页面上。");
       }
-      window.location.href = `/diagnostic/result?id=${encodeURIComponent(completed.attemptId)}&token=${encodeURIComponent(completed.accessToken)}`;
     });
   }
 

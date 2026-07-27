@@ -12,19 +12,38 @@ import {
 import { DSE_DIAGNOSTIC_TEMPLATE_KEY } from "@/lib/question-bank/dse-chinese-diagnostic-v1";
 import { prisma } from "@/lib/prisma";
 
+const normalizedDuration = z.number().finite().transform((value) =>
+  Math.min(86_400_000, Math.max(0, Math.round(value))),
+);
+const normalizedHintLevel = z.number().finite().transform((value) =>
+  Math.min(2, Math.max(0, Math.round(value))),
+);
+const normalizedRevisionCount = z.number().finite().transform((value) =>
+  Math.min(1_000, Math.max(0, Math.round(value))),
+);
+
 const saveAnswerSchema = z.object({
   accessToken: z.string().min(32).max(128),
   questionId: z.string().min(3).max(80),
   firstAnswer: z.string().min(1).max(500),
   finalAnswer: z.string().min(1).max(500),
-  firstResponseMs: z.number().int().min(0).max(3_600_000),
-  totalResponseMs: z.number().int().min(0).max(3_600_000),
-  hintLevel: z.number().int().min(0).max(2),
-  revisionCount: z.number().int().min(0).max(100),
+  firstResponseMs: normalizedDuration,
+  totalResponseMs: normalizedDuration,
+  hintLevel: normalizedHintLevel,
+  revisionCount: normalizedRevisionCount,
 });
 
 function newAccessToken() {
   return randomBytes(24).toString("hex");
+}
+
+function isRetryableStorageError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError &&
+    ["P1008", "P2028", "P2034"].includes(error.code);
+}
+
+async function wait(milliseconds: number) {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export async function startOrResumeDiagnosticAction(existingToken?: string, distributionSlug?: string) {
@@ -79,9 +98,7 @@ export async function saveDiagnosticAnswerAction(input: unknown) {
   const parsed = saveAnswerSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "invalid_payload" };
 
-  const attempt = await prisma.diagnosticAttempt.findUnique({
-    where: { accessToken: parsed.data.accessToken },
-  });
+  const attempt = await prisma.diagnosticAttempt.findUnique({ where: { accessToken: parsed.data.accessToken } });
   if (!attempt || attempt.status === "completed") {
     return { ok: false as const, error: "attempt_unavailable" };
   }
@@ -96,51 +113,65 @@ export async function saveDiagnosticAnswerAction(input: unknown) {
   }
 
   const scored = scoreDiagnosticAnswer(question, parsed.data.finalAnswer);
-  const existing = await prisma.diagnosticAnswer.findUnique({
-    where: {
-      attemptId_questionId: {
-        attemptId: attempt.id,
-        questionId: question.id,
-      },
-    },
-  });
-
-  await prisma.$transaction([
-    prisma.diagnosticAnswer.upsert({
-      where: {
-        attemptId_questionId: {
-          attemptId: attempt.id,
-          questionId: question.id,
+  for (let storageAttempt = 0; storageAttempt < 3; storageAttempt++) {
+    try {
+      const existing = await prisma.diagnosticAnswer.findUnique({
+        where: {
+          attemptId_questionId: {
+            attemptId: attempt.id,
+            questionId: question.id,
+          },
         },
-      },
-      create: {
-        attemptId: attempt.id,
-        questionId: question.id,
-        firstAnswer: parsed.data.firstAnswer,
-        finalAnswer: parsed.data.finalAnswer,
-        firstResponseMs: parsed.data.firstResponseMs,
-        totalResponseMs: parsed.data.totalResponseMs,
-        hintLevel: parsed.data.hintLevel,
-        revisionCount: parsed.data.revisionCount,
-        score: scored.score,
-        dimensionScores: scored.dimensionScores as Prisma.InputJsonValue,
-      },
-      update: {
-        finalAnswer: parsed.data.finalAnswer,
-        totalResponseMs: parsed.data.totalResponseMs,
-        hintLevel: Math.max(existing?.hintLevel ?? 0, parsed.data.hintLevel),
-        revisionCount: (existing?.revisionCount ?? 0) + parsed.data.revisionCount,
-        score: scored.score,
-        dimensionScores: scored.dimensionScores as Prisma.InputJsonValue,
-      },
-    }),
-    prisma.diagnosticAttempt.update({
-      where: { id: attempt.id },
-      data: { currentModule: question.moduleId },
-    }),
-  ]);
+      });
 
-  return { ok: true as const };
+      await prisma.$transaction([
+        prisma.diagnosticAnswer.upsert({
+          where: {
+            attemptId_questionId: {
+              attemptId: attempt.id,
+              questionId: question.id,
+            },
+          },
+          create: {
+            attemptId: attempt.id,
+            questionId: question.id,
+            firstAnswer: parsed.data.firstAnswer,
+            finalAnswer: parsed.data.finalAnswer,
+            firstResponseMs: parsed.data.firstResponseMs,
+            totalResponseMs: parsed.data.totalResponseMs,
+            hintLevel: parsed.data.hintLevel,
+            revisionCount: parsed.data.revisionCount,
+            score: scored.score,
+            dimensionScores: scored.dimensionScores as Prisma.InputJsonValue,
+          },
+          update: {
+            finalAnswer: parsed.data.finalAnswer,
+            totalResponseMs: parsed.data.totalResponseMs,
+            hintLevel: Math.max(existing?.hintLevel ?? 0, parsed.data.hintLevel),
+            revisionCount: (existing?.revisionCount ?? 0) + parsed.data.revisionCount,
+            score: scored.score,
+            dimensionScores: scored.dimensionScores as Prisma.InputJsonValue,
+          },
+        }),
+        prisma.diagnosticAttempt.update({
+          where: { id: attempt.id },
+          data: { currentModule: question.moduleId },
+        }),
+      ]);
+
+      return { ok: true as const };
+    } catch (error) {
+      if (storageAttempt < 2 && isRetryableStorageError(error)) {
+        await wait(60 * (storageAttempt + 1));
+        continue;
+      }
+      const code = error instanceof Prisma.PrismaClientKnownRequestError ? error.code : "unknown";
+      console.error("Diagnostic answer save failed", { questionId: question.id, code });
+      return { ok: false as const, error: "storage_error" };
+    }
+  }
+
+  return { ok: false as const, error: "storage_error" };
 }
 
 export async function completeDiagnosticAttemptAction(accessToken: string) {
