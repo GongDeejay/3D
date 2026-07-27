@@ -16,7 +16,7 @@ export default async function NewDistributionPage({
       </Link>
       <h1 className="mt-4 text-2xl font-semibold text-zinc-900">新建发放</h1>
       <p className="mt-2 text-sm text-zinc-600">
-        为本次发放写清楚「场景」：受众是谁、在什么场合填写、组织者希望解决什么问题。填写者将在问卷顶部看到这段说明。
+        先选择评测项目，再为本次发放写清楚受众与场景。系统会生成该批次专属的参与链接和二维码。
       </p>
 
       {sp.error === "missing" ? (
@@ -31,12 +31,42 @@ export default async function NewDistributionPage({
       ) : null}
 
       <form action={createDistributionAction} className="mt-8 flex flex-col gap-5">
+        <fieldset>
+          <legend className="text-sm font-medium text-zinc-800">评测项目</legend>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <label className="cursor-pointer rounded-xl border border-zinc-300 bg-white p-4 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+              <input
+                type="radio"
+                name="templateKey"
+                value="dse-chinese-diagnostic-v1"
+                defaultChecked
+                className="sr-only"
+              />
+              <span className="block font-medium text-zinc-900">DSE 中文诊断</span>
+              <span className="mt-1 block text-xs leading-relaxed text-zinc-600">
+                两场任务制，记录耗时、提示与修改过程；当前开放第一场信息侦察。
+              </span>
+            </label>
+            <label className="cursor-pointer rounded-xl border border-zinc-300 bg-white p-4 has-[:checked]:border-zinc-700 has-[:checked]:bg-zinc-50">
+              <input
+                type="radio"
+                name="templateKey"
+                value="interaction-literacy-v1"
+                className="sr-only"
+              />
+              <span className="block font-medium text-zinc-900">AI 交互素养问卷</span>
+              <span className="mt-1 block text-xs leading-relaxed text-zinc-600">
+                原有短问卷，用于了解 AI 对话、评估与轻量安全意识。
+              </span>
+            </label>
+          </div>
+        </fieldset>
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-zinc-800">批次标题</span>
           <input
             name="title"
             required
-            placeholder="例如：社区讲座 · 课后反馈"
+            placeholder="例如：八年级中文能力 · 首次侦察"
             className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400"
           />
         </label>
@@ -45,7 +75,7 @@ export default async function NewDistributionPage({
           <input
             name="scenarioSummary"
             required
-            placeholder="例如：面向首次接触 ChatGPT 的居民"
+            placeholder="例如：面向八年级学生，区分未学过与底层能力卡点"
             className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-400"
           />
         </label>

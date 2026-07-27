@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export default async function AdminHomePage() {
   const rows = await prisma.surveyDistribution.findMany({
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { responses: true } } },
+    include: { _count: { select: { responses: true, diagnosticAttempts: true } } },
   });
 
   return (
@@ -40,7 +40,14 @@ export default async function AdminHomePage() {
                   <p className="text-sm text-zinc-500">{r.scenarioSummary}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-4 text-sm text-zinc-600">
-                  <span>{r._count.responses} 份回收</span>
+                  <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs">
+                    {r.templateKey === "dse-chinese-diagnostic-v1" ? "中文诊断" : "AI 素养"}
+                  </span>
+                  <span>
+                    {r.templateKey === "dse-chinese-diagnostic-v1"
+                      ? `${r._count.diagnosticAttempts} 次参与`
+                      : `${r._count.responses} 份回收`}
+                  </span>
                   <span className="text-zinc-400">
                     {r.createdAt.toLocaleDateString("zh-CN")}
                   </span>

@@ -21,9 +21,20 @@ type PublicBank = {
   questions: PublicDiagnosticQuestion[];
 };
 
-const STORAGE_KEY = "dse-diagnostic-v1-access-token";
+type DistributionContext = {
+  slug: string;
+  title: string;
+  scenarioSummary: string;
+  scenarioDetail: string;
+};
 
-export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
+export function DiagnosticRunner({
+  bank,
+  distribution,
+}: {
+  bank: PublicBank;
+  distribution?: DistributionContext;
+}) {
   const [accessToken, setAccessToken] = useState("");
   const [answeredIds, setAnsweredIds] = useState<string[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -40,6 +51,7 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
   const question = bank.questions[questionIndex];
   const currentModule = bank.modules.find((item) => item.id === question?.moduleId);
   const progress = Math.round((answeredIds.length / bank.questions.length) * 100);
+  const storageKey = `dse-diagnostic-v1:${distribution?.slug ?? "demo"}:access-token`;
 
   const moduleQuestionCounts = useMemo(
     () => Object.fromEntries(bank.modules.map((item) => [
@@ -52,22 +64,26 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    const savedToken = window.localStorage.getItem(STORAGE_KEY) ?? undefined;
+    const savedToken = window.localStorage.getItem(storageKey) ?? undefined;
     startTransition(async () => {
-      const result = await startOrResumeDiagnosticAction(savedToken);
+      const result = await startOrResumeDiagnosticAction(savedToken, distribution?.slug);
+      if (!result.ok) {
+        setError("本次评测链接不可用，请联系发放者获取新链接。");
+        return;
+      }
       if (result.status === "completed") {
-        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(storageKey);
         window.location.href = `/diagnostic/result?id=${encodeURIComponent(result.attemptId)}&token=${encodeURIComponent(result.accessToken)}`;
         return;
       }
-      window.localStorage.setItem(STORAGE_KEY, result.accessToken);
+      window.localStorage.setItem(storageKey, result.accessToken);
       setAccessToken(result.accessToken);
       setAnsweredIds(result.answeredQuestionIds);
       const firstUnanswered = bank.questions.findIndex((item) => !result.answeredQuestionIds.includes(item.id));
       setQuestionIndex(firstUnanswered >= 0 ? firstUnanswered : bank.questions.length - 1);
       questionStartedAt.current = window.performance.now();
     });
-  }, [bank.questions]);
+  }, [bank.questions, distribution?.slug, storageKey]);
 
   function resetQuestionState(nextIndex: number) {
     setQuestionIndex(nextIndex);
@@ -180,6 +196,13 @@ export function DiagnosticRunner({ bank }: { bank: PublicBank }) {
           <p>MISSION 01</p>
           <h1>信息侦察</h1>
           <span className={styles.duration}>预计 36 分钟</span>
+          {distribution && (
+            <div className={styles.batchContext}>
+              <span>本次发放</span>
+              <strong>{distribution.title}</strong>
+              <p>{distribution.scenarioSummary}</p>
+            </div>
+          )}
           <nav>
             {bank.modules.map((item) => {
               const moduleQuestions = bank.questions.filter((q) => q.moduleId === item.id);

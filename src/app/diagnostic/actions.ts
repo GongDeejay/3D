@@ -27,13 +27,27 @@ function newAccessToken() {
   return randomBytes(24).toString("hex");
 }
 
-export async function startOrResumeDiagnosticAction(existingToken?: string) {
+export async function startOrResumeDiagnosticAction(existingToken?: string, distributionSlug?: string) {
+  const distribution = distributionSlug
+    ? await prisma.surveyDistribution.findUnique({ where: { slug: distributionSlug } })
+    : null;
+  if (
+    distributionSlug &&
+    (!distribution || distribution.templateKey !== DSE_DIAGNOSTIC_TEMPLATE_KEY)
+  ) {
+    return { ok: false as const, error: "distribution_unavailable" };
+  }
+
   if (existingToken && existingToken.length >= 32) {
     const existing = await prisma.diagnosticAttempt.findUnique({
       where: { accessToken: existingToken },
       include: { answers: { orderBy: { answeredAt: "asc" } } },
     });
-    if (existing && existing.templateKey === DSE_DIAGNOSTIC_TEMPLATE_KEY) {
+    if (
+      existing &&
+      existing.templateKey === DSE_DIAGNOSTIC_TEMPLATE_KEY &&
+      existing.distributionId === (distribution?.id ?? null)
+    ) {
       return {
         ok: true as const,
         attemptId: existing.id,
@@ -48,6 +62,7 @@ export async function startOrResumeDiagnosticAction(existingToken?: string) {
     data: {
       accessToken: newAccessToken(),
       templateKey: DSE_DIAGNOSTIC_TEMPLATE_KEY,
+      distributionId: distribution?.id,
     },
   });
 

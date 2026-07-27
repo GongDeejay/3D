@@ -6,7 +6,7 @@ export default async function DiagnosticAdminPage() {
   const attempts = await prisma.diagnosticAttempt.findMany({
     orderBy: { startedAt: "desc" },
     take: 50,
-    include: { answers: true },
+    include: { answers: true, distribution: true },
   });
 
   const completed = attempts.filter((attempt) => attempt.status === "completed").length;
@@ -52,6 +52,7 @@ export default async function DiagnosticAdminPage() {
               <thead className="bg-zinc-50 text-xs text-zinc-500">
                 <tr>
                   <th className="px-5 py-3 font-medium">开始时间</th>
+                  <th className="px-4 py-3 font-medium">发放批次</th>
                   <th className="px-4 py-3 font-medium">状态</th>
                   <th className="px-4 py-3 font-medium">进度</th>
                   <th className="px-4 py-3 font-medium">原始表现</th>
@@ -66,6 +67,9 @@ export default async function DiagnosticAdminPage() {
                     <tr key={attempt.id} className="text-zinc-700">
                       <td className="whitespace-nowrap px-5 py-4 text-xs text-zinc-500">
                         {attempt.startedAt.toLocaleString("zh-CN", { timeZone: "Asia/Hong_Kong" })}
+                      </td>
+                      <td className="px-4 py-4">
+                        {attempt.distribution?.title ?? <span className="text-zinc-400">演示入口</span>}
                       </td>
                       <td className="px-4 py-4">
                         <span className={`rounded-full px-2 py-1 text-xs ${

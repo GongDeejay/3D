@@ -21,7 +21,8 @@ model SurveyDistribution {
   templateKey     String   @default("interaction-literacy-v1")
   createdAt       DateTime @default(now())
 
-  responses SurveyResponse[]
+  responses          SurveyResponse[]
+  diagnosticAttempts DiagnosticAttempt[]
 }
 
 model SurveyResponse {
@@ -37,20 +38,23 @@ model SurveyResponse {
 
 /// 一次 DSE 中文诊断；accessToken 用于匿名续做，不代表登录身份
 model DiagnosticAttempt {
-  id            String    @id @default(cuid())
-  accessToken   String    @unique
-  templateKey   String    @default("dse-chinese-diagnostic-v1")
-  status        String    @default("in_progress")
-  currentModule String    @default("radio")
-  displayScript String    @default("simplified")
-  startedAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  completedAt   DateTime?
+  id             String              @id @default(cuid())
+  accessToken    String              @unique
+  distributionId String?
+  distribution   SurveyDistribution? @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  templateKey    String              @default("dse-chinese-diagnostic-v1")
+  status         String              @default("in_progress")
+  currentModule  String              @default("radio")
+  displayScript  String              @default("simplified")
+  startedAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  completedAt    DateTime?
 
   answers DiagnosticAnswer[]
 
   @@index([status])
   @@index([templateKey])
+  @@index([distributionId])
 }
 
 /// 每题保留首次答案与最终答案，用于区分不会、修正和提示后的改善
